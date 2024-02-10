@@ -1,0 +1,18 @@
+*{  
+
+    /* resetting all the default margin and padding of all the elements */
+    margin:0 ; 
+    padding:0 ; 
+    box-sizing:border-box ;  /*default was content-box*/
+}
+
+#canvas1{
+    border:5px solid black; 
+    position:absolute;   /*This means that the element will be positioned relative to its closest positioned ancestor or to the document if there is no positioned ancestor.*/
+    top: 50%;
+    left :50% ; 
+    transform:translate(-50% , -50%) ; 
+    background:#4d79bc; 
+    max-width : 100% ;
+    max-height: 100%;
+}
