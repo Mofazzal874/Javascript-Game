@@ -189,10 +189,33 @@ class Angler1 extends Enemy {
             context.font = this.fontSize + 'px ' + this.fontFamily;
             // Score
             context.fillText('Score: ' + this.game.score, 20, 40);
+
             // Ammo recharging animation bar
             // One stick for one ammo
             for (let i = 0; i < this.game.ammo; i++) {
                 context.fillRect(20 + 5 * i, 50, 3, 20);
+            }
+            //timer 
+            const formattedTime = (this.game.gameTime*0.001).toFixed(1) ; //this will format the time from milliseconds to seconds
+                                                                          //and fixed the number after decimal point to 1 digit only
+            context.fillText('Timer: ' + formattedTime , 20 , 100)  ;
+            //game over message
+            if(this.game.gameOver){
+                context.textAlign = 'center' ; 
+                let message1 ; 
+                let message2 ; 
+                if(this.game.score > this.game.winningScore){
+                    message1 = 'Win Win!'; 
+                    message2 = "Ayhay! Jita gecho dehi!" ; 
+                }
+                else{
+                    message1 = 'You Lost!very sad!' ; 
+                    message2 = 'Anyway....Try again!'
+                }
+                context.font = '50px ' + this.fontFamily ;
+                context.fillText(message1 , this.game.width*0.5 , this.game.height*0.5 - 40) ;//-40 is to move the message1 40point up vertically 
+                context.font = '25px '+ this.fontFamily ; 
+                context.fillText(message2, this.game.width*0.5 , this.game.height*0.5 + 40) ; //+40 is to move the message2 40points down vertically  
             }
             context.restore() ; 
         }
@@ -222,23 +245,27 @@ class Angler1 extends Enemy {
             this.ammo = 20 ; //starting ammo 
             this.maxAmmo = 50 ;  //maximum ammo 
             this.ammoTimer = 0 ; 
-            this.ammoInterval = 500 ; //half second..Replenish ammo after every .5 seconds
+            this.ammoInterval = 400 ; //half second..Replenish ammo after every .5 seconds
             this.gameOver = false ;
             this.score = 0 ;
-            this.winningScore = 10 ;  
+            this.winningScore = 10 ;
+            this.gameTime = 0;  //counting game time 
+            this.timeLimit = 10000 ; //game time to set time limit for the game   
              
 
         }
         update(deltaTime){
+            if(!this.gameOver) this.gameTime+=deltaTime ; 
+            if(this.gameTime > this.timeLimit) this.gameOver = true; 
             this.player.update() ; //ei Game er er jonne make kora player tar update method the call holo ;
 
             //all about ammo refiling and ammoTimer
             if(this.ammoTimer> this.ammoInterval){
-                if(this.ammo<this.maxAmmo) this.ammo++ ; 
+                if(this.ammo < this.maxAmmo) this.ammo++ ; 
                 this.ammoTimer = 0 ; 
             }
             else {
-                this.ammoTimer+=deltaTime ; 
+                this.ammoTimer += deltaTime ; 
             }
 
             //all about enemy and their timerInterval
@@ -256,7 +283,7 @@ class Angler1 extends Enemy {
                         projectile.markedForDeletion = true;
                         if(enemy.lives<=0){
                             enemy.markedForDeletion = true ; 
-                            this.score+=enemy.score ; 
+                            if(!this.gameOver) this.score+=enemy.score ; 
                             if(this.score>this.winningScore)this.gameOver = true; 
 
                         }
@@ -308,6 +335,7 @@ class Angler1 extends Enemy {
     //Now we'll a animation loop which will update the update()  and draw() function 60 times in a second for a seamless experience
     function animate(timeStamp){
         const deltaTime = timeStamp - lastTime ; //time stamp is found from requestAnimationFrame
+        //delta time is the time difference between this animation loop time and it's previous animation loop time 
         lastTime = timeStamp ; //setting the lastTime from the starting animation timeStamp 
         ctx.clearRect(0, 0, canvas.width , canvas.height) ;
         game.update(deltaTime) ; 
