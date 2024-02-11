@@ -132,6 +132,8 @@ window.addEventListener('load', function() {
             this.x = this.game.width ; 
             this.speedX = Math.random()*-1.5-0.5 ;
             this.markedForDeletion = false ; 
+            this.lives = 5 ; //every enemy have 5 lives 
+            this.score = this.lives ; //if you kill this enemy you get 'lives' point
 
 
         }
@@ -141,7 +143,10 @@ window.addEventListener('load', function() {
         }
         draw(context){
             context.fillStyle = 'red' ; 
-            context.fillRect(this.x , this.y , this.width , this.height) ; 
+            context.fillRect(this.x , this.y , this.width , this.height) ;
+            context.fillStyle = 'black' ; 
+            context.font = '20 px Helvatica' ; 
+            context.fillText(this.lives , this.x , this.y) ;  
         }
 
     }
@@ -168,24 +173,32 @@ class Angler1 extends Enemy {
 
     }
     //timer , score and other UI elements to display to the user
-    class UI{
-
-        constructor(game){
-            this.game = game ; 
-            this.fonSize = 25 ; 
-            this.fontfamily = 'Helvatica' ; 
-            this.color = 'yellow' ; 
+    class UI {
+        constructor(game) {
+            this.game = game;
+            this.fontSize = 25;
+            this.fontFamily = 'Helvetica'; // Corrected typo here
+            this.color = 'white';
         }
-        draw(context){
-            //ammo recharging animation bar 
-            //one stick for one ammo 
-            context.fillStyle = this.color ; 
-            for(let i = 0 ; i < this.game.ammo ; i++ ){
-                context.fillRect(20+5*i,50, 3 , 20 ) ; 
+        draw(context) {
+            context.save()  ; 
+            context.fillStyle = this.color;
+            context.shadowOffsetX = 2; 
+            context.shadowOffsety = 2; 
+            context.shadowColor = 'black'  ; 
+            context.font = this.fontSize + 'px ' + this.fontFamily;
+            // Score
+            context.fillText('Score: ' + this.game.score, 20, 40);
+            // Ammo recharging animation bar
+            // One stick for one ammo
+            for (let i = 0; i < this.game.ammo; i++) {
+                context.fillRect(20 + 5 * i, 50, 3, 20);
             }
+            context.restore() ; 
         }
-
     }
+    
+    
     //This Game class can be called the Brain of the project
     //all logic will come together in the main game class
     //main game class- will handle the game loop, update the game state, and render the game world.
@@ -210,12 +223,16 @@ class Angler1 extends Enemy {
             this.maxAmmo = 50 ;  //maximum ammo 
             this.ammoTimer = 0 ; 
             this.ammoInterval = 500 ; //half second..Replenish ammo after every .5 seconds
-            this.gameOver = false ; 
+            this.gameOver = false ;
+            this.score = 0 ;
+            this.winningScore = 10 ;  
              
 
         }
         update(deltaTime){
             this.player.update() ; //ei Game er er jonne make kora player tar update method the call holo ;
+
+            //all about ammo refiling and ammoTimer
             if(this.ammoTimer> this.ammoInterval){
                 if(this.ammo<this.maxAmmo) this.ammo++ ; 
                 this.ammoTimer = 0 ; 
@@ -223,10 +240,31 @@ class Angler1 extends Enemy {
             else {
                 this.ammoTimer+=deltaTime ; 
             }
+
+            //all about enemy and their timerInterval
             this.enemies.forEach(enemy=>{
-                enemy.update() ; 
+                enemy.update() ;
+                //collision between enemy and player ...enemy vanished
+                if(this.checkCollison(this.player, enemy)) {  //dekhtechi player er sathe collision hoiteche kina
+                                                                //true ashle collision hoiteche and we have to vanish the enemies 
+                    enemy.markedForDeletion = true ;        //marking to delete 
+                }
+                //collision between projectile and enemy ....enemy life decrease by one
+                this.player.projectiles.forEach(projectile =>{
+                    if(this.checkCollison(projectile , enemy )) {
+                        enemy.lives-- ; 
+                        projectile.markedForDeletion = true;
+                        if(enemy.lives<=0){
+                            enemy.markedForDeletion = true ; 
+                            this.score+=enemy.score ; 
+                            if(this.score>this.winningScore)this.gameOver = true; 
+
+                        }
+                    }
+                })
+
             });
-            this.enemies = this.enemies.filter(enemy=>!enemy.markedForDeletion) ; 
+            this.enemies = this.enemies.filter(enemy=>!enemy.markedForDeletion) ;   //here we are deleting 
             if(this.enemyTimer>this.enemyInterval && !this.gameOver) {
                 this.addEnemy() ; 
                 this.enemyTimer = 0 ; 
@@ -245,6 +283,17 @@ class Angler1 extends Enemy {
         }
         addEnemy(){
             this.enemies.push(new Angler1(this)) ; 
+        }
+        //return true if all of the conditions is true and means collision happens and the function return true 
+        //return false if any of the conditions is false and means collision didn't happen
+        checkCollison(rect1 , rect2){
+            return (
+                //conditions for not clashing with each other in 4 possible cases
+                (rect1.x<rect2.x+rect2.width) && //enemy1 is forward of enemy2 w.r.t to their vertical line1 height1 and height2
+                (rect1.x+rect1.width>rect2.x) &&  //enemy2 is forward of enemy1
+                (rect1.y<rect2.y+rect2.height)&&   //enemy1 is above of enemy2 
+                (rect1.y + rect2.height > rect1.y)  //enemy2 is above of enemy1
+            )
         }
         
 
