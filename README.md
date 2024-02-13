@@ -1,3 +1,4 @@
+(must be played with pc for control)
 You're a Hunter ..
 you Hunt a "Mystical Creature" called "Samba" ...This creature is some type of Humanoid and robotic entity..
 You have to hunt it down...or you're frucked up man...
