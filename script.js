@@ -456,7 +456,7 @@ class Layer {
             this.winningScore = 100 ;
             this.gameTime = 0;  //counting game time 
             this.timeLimit = 30000 ; //game time to set time limit for the game 
-            this.speed = 6;      //this is the game speed
+            this.speed = 4;      //this is the game speed
             this.debug = false;
             this.life = 9 ;
 
