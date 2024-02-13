@@ -10,7 +10,7 @@ window.addEventListener('load', function() {
     //Drawing context-It is a built in object that contains all the methods and properties 
     // that allows us to draw and animate colours , shapes , and other graphics on HTML canvas.
     const ctx = canvas.getContext('2d'); //we can pass 2d or webGl(3d) as an argument here to work with 2d or 3d graphics is the canvas.WebGL is used for 3d rendering context.
-    canvas.width = 500 ; 
+    canvas.width = 1000 ; 
     canvas.height = 500 ; 
 
     //will keep track of user input like arrow keys, mouse clicks, etc.
@@ -94,9 +94,12 @@ window.addEventListener('load', function() {
                                   //this will hold all current projectile objects 
 
             this.image = document.getElementById('player') ; 
+            this.powerUp = false ;
+            this.powerUpTimer = 0 ; 
+            this.powerUpLimit = 10000; 
 
         }
-        update(){
+        update(deltaTime){
             if(this.game.keys.includes('ArrowUp')) this.speedY = -this.maxSpeed ; //move the player up
             else if(this.game.keys.includes('ArrowDown')) this.speedY = this.maxSpeed; //move the player down
             else this.speedY = 0 ; 
@@ -115,11 +118,28 @@ window.addEventListener('load', function() {
             else {
                 this.frameX = 0 ; 
             }
+            //power up logic
+            if(this.powerUp){
+                if(this.powerUpTimer> this.powerUpLimit){
+                    this.powerUpTimer = 0 ; 
+                    this.powerUp = false ; 
+                    this.frameY = 0 ; 
+                
+                }
+                else {
+                    this.powerUpTimer +=deltaTime; 
+                    this.frameY = 1 ; 
+                    this.game.ammo +=0.1 ; 
+                }
+            }
         }
         draw(context){  //specify in which context or layer we want to draw the player if the game is multi-layered.
             
             //show the rectangle only if debug mode is on
             if(game.debug)context.strokeRect(this.x , this.y , this.width , this.height) ; //making a rectangular shape for the player in the x, y  co-ordinates and with the size of player width and height.
+            this.projectiles.forEach(projectile => {
+                projectile.draw(context) ; 
+            }) ;
             context.drawImage(this.image ,this.frameX*this.width , this.frameY*this.height , this.width  ,this.height ,  this.x , this.y, this.width , this.height) ;
             //drawImage function takes maximum 9 arguments and minimum 3 arguments
             //this.image = the image that you want to set
@@ -132,9 +152,7 @@ window.addEventListener('load', function() {
             //this.width = destination e zototuku width e boshate chai image ta 
             //this.height = destination e zototuku height e boshate chai image ta 
 
-            this.projectiles.forEach(projectile => {
-                projectile.draw(context) ; 
-            }) ;
+            
 
 
         }
@@ -144,9 +162,21 @@ window.addEventListener('load', function() {
                 this.game.ammo-- ; //every time we create a new projectile , we decrease the value of that ammo by 1
 
             }
-            
+            if(this.powerUp) this.shootBottom() ; 
             console.log(this.projectiles) ;
             
+        }
+        shootBottom(){
+            if(this.game.ammo>0){
+                this.projectiles.push(new Projectile(this.game, this.x+80 , this.y +175)) ; 
+                
+
+            }
+        }
+        enterPowerUp(){
+            this.powerUpTimer = 0 ; 
+            this.powerUp = true 
+            this.game.ammo = this.game.maxAmmo ; 
         }
          
         
@@ -162,20 +192,23 @@ window.addEventListener('load', function() {
             this.x = this.game.width ; 
             this.speedX = Math.random()*-1.5-0.5 ;
             this.markedForDeletion = false ; 
-            this.lives = 5 ; //every enemy have 5 lives 
-            this.score = this.lives ; //if you kill this enemy you get 'lives' point
-
+            this.frameX = 0 ; 
+            this.frameY = 0 ; 
+            this.maxFrame = 37 ; 
 
         }
         update(){
-            this.x += this.speedX ; 
+            this.x += this.speedX - this.game.speed ; 
             if(this.x +this.width < 0 ) this.markedForDeletion = true ; //the enemey is outside of the box 
+            if(this.frameX < this.maxFrame){
+                this.frameX++ ; 
+            }
+            else this.frameX = 0 ; 
         }
         draw(context){
-            context.fillStyle = 'red' ; 
-            context.fillRect(this.x , this.y , this.width , this.height) ;
-            context.fillStyle = 'black' ; 
-            context.font = '20 px Helvatica' ; 
+           if(this.game.debug) context.strokeRect(this.x , this.y , this.width , this.height) ;
+            context.drawImage(this.image ,this.frameX * this.width , this.frameY * this.height ,this.width , this.height ,   this.x , this.y , this.width , this.height) ; 
+            context.font = '20 px Helvetica' ; 
             context.fillText(this.lives , this.x , this.y) ;  
         }
 
@@ -188,14 +221,53 @@ class Angler1 extends Enemy {
         //all the properties of Enemy
         super(game) ; //to execute all the features of Enemy constructor class.Otherwise Angler1 constructor will override the Enemy class constructor and Enemy properties will not be executed here 
         //additional properties
-        this.width = 228*0.2 ;  //width of this enemy
-        this.height = 169*0.2 ; //height of this enemy 
-        this.y = Math.random()*(this.game.height*0.9 - this.height) ; 
+        this.width = 228 ;  //width of this enemy
+        this.height = 169 ; //height of this enemy 
+        this.y = Math.random()*(this.game.height*0.9 - this.height) ;
+        this.image = document.getElementById('angler1') ; 
+        this.frameY = Math.floor(Math.random()*3); 
+        this.lives = 2 ; //every enemy have 5 lives 
+            this.score = this.lives ; //if you kill this enemy you get 'lives' point
+
+    }
+
+}
+class Angler2 extends Enemy {
+    constructor(game){
+        //all the properties of Enemy
+        super(game) ; //to execute all the features of Enemy constructor class.Otherwise Angler1 constructor will override the Enemy class constructor and Enemy properties will not be executed here 
+        //additional properties
+        this.width = 213 ;  //width of this enemy
+        this.height = 165 ; //height of this enemy 
+        this.y = Math.random()*(this.game.height*0.9 - this.height) ;
+        this.image = document.getElementById('angler2') ; 
+        this.frameY = Math.floor(Math.random()*2);
+        this.lives = 3 ; //every enemy have 5 lives 
+            this.score = this.lives ; //if you kill this enemy you get 'lives' point 
+
+    }
+
+}
+
+class luckyFish extends Enemy {
+    constructor(game){
+        //all the properties of Enemy
+        super(game) ; //to execute all the features of Enemy constructor class.Otherwise Angler1 constructor will override the Enemy class constructor and Enemy properties will not be executed here 
+        //additional properties
+        this.width = 99 ;  //width of this enemy
+        this.height = 95 ; //height of this enemy 
+        this.y = Math.random()*(this.game.height*0.9 - this.height) ;
+        this.image = document.getElementById('lucky') ; 
+        this.frameY = Math.floor(Math.random()*2);
+        this.lives = 3 ; //every enemy have 5 lives 
+        this.score = 15 ; //if you kill this enemy you get 'lives' point 
+        this.type = 'lucky'
+
     }
 
 }
     //individual layers for background, foreground, and seamlessly scrolling multi-layered parallax backgrounds.
-    class Layer {
+class Layer {
 
         constructor(game , image , speedModifier){
             this.game = game ; 
@@ -257,11 +329,7 @@ class Angler1 extends Enemy {
             // Score
             context.fillText('Score: ' + this.game.score, 20, 40);
 
-            // Ammo recharging animation bar
-            // One stick for one ammo
-            for (let i = 0; i < this.game.ammo; i++) {
-                context.fillRect(20 + 5 * i, 50, 3, 20);
-            }
+            
             //timer 
             const formattedTime = (this.game.gameTime*0.001).toFixed(1) ; //this will format the time from milliseconds to seconds
                                                                           //and fixed the number after decimal point to 1 digit only
@@ -283,6 +351,12 @@ class Angler1 extends Enemy {
                 context.fillText(message1 , this.game.width*0.5 , this.game.height*0.5 - 40) ;//-40 is to move the message1 40point up vertically 
                 context.font = '25px '+ this.fontFamily ; 
                 context.fillText(message2, this.game.width*0.5 , this.game.height*0.5 + 40) ; //+40 is to move the message2 40points down vertically  
+            }
+            // Ammo recharging animation bar
+            // One stick for one ammo
+            if(this.game.player.powerUp) context.fillStyle ='#ffffbd' ; 
+            for (let i = 0; i < this.game.ammo; i++) {
+                context.fillRect(20 + 5 * i, 50, 3, 20);
             }
             context.restore() ; 
         }
@@ -318,7 +392,7 @@ class Angler1 extends Enemy {
             this.score = 0 ;
             this.winningScore = 10 ;
             this.gameTime = 0;  //counting game time 
-            this.timeLimit = 10000 ; //game time to set time limit for the game 
+            this.timeLimit = 15000 ; //game time to set time limit for the game 
             this.speed = 1;      //this is the game speed
 
             this.debug = true; 
@@ -331,7 +405,7 @@ class Angler1 extends Enemy {
             if(this.gameTime > this.timeLimit) this.gameOver = true; 
             this.background.update() ; 
             this.background.layer4.update() ; 
-            this.player.update() ; //ei Game er er jonne make kora player tar update method the call holo ;
+            this.player.update(deltaTime) ; //ei Game er er jonne make kora player tar update method the call holo ;
 
             //all about ammo refiling and ammoTimer
             if(this.ammoTimer> this.ammoInterval){
@@ -348,7 +422,9 @@ class Angler1 extends Enemy {
                 //collision between enemy and player ...enemy vanished
                 if(this.checkCollison(this.player, enemy)) {  //dekhtechi player er sathe collision hoiteche kina
                                                                 //true ashle collision hoiteche and we have to vanish the enemies 
-                    enemy.markedForDeletion = true ;        //marking to delete 
+                    enemy.markedForDeletion = true ;        //marking to delete
+                    if(enemy.type ='lucky') this.player.enterPowerUp() ; 
+                    else this.score-- ;  
                 }
                 //collision between projectile and enemy ....enemy life decrease by one
                 this.player.projectiles.forEach(projectile =>{
@@ -386,7 +462,12 @@ class Angler1 extends Enemy {
         }
         
         addEnemy(){
-            this.enemies.push(new Angler1(this)) ; 
+            const randomize = Math.random() ;
+            //create 50% time angler1 and other 50% time angler2 
+            if(randomize<0.3) this.enemies.push(new Angler1(this)) ;
+            else if(randomize<0.6) this.enemies.push(new Angler2(this)) ;
+            else this.enemies.push(new luckyFish(this)) ;
+             
         }
         //return true if all of the conditions is true and means collision happens and the function return true 
         //return false if any of the conditions is false and means collision didn't happen
