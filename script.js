@@ -2,10 +2,23 @@
 //this is the first event to be called when the page is loaded including all the 
 //images, css, js and other resources.
 window.addEventListener('load', function() {
+    //To play again 
+    function reloadGame() {
+        window.location.reload();
+    }
+
     //canvas serves as a container for graphics, text, and other visual elements.
     //it is a rectangular area on an HTML page.
     //canvas setup
     const canvas = document.getElementById('canvas1');
+
+
+    const playAgainButton = document.getElementById('play-again-button');
+    
+    // Add event listener to play again button
+    playAgainButton.addEventListener('click', function() {
+        reloadGame(); // Reload the game when play again button is clicked
+    });
 
     //Drawing context-It is a built in object that contains all the methods and properties 
     // that allows us to draw and animate colours , shapes , and other graphics on HTML canvas.
@@ -388,18 +401,13 @@ class Layer {
                 context.textAlign = 'center' ; 
                 let message1 ; 
                 let message2 ; 
-                if(this.game.score > this.game.winningScore){
-                    message1 = 'Win Win!'; 
-                    message2 = "Ayhay! Jita gecho dehi!" ; 
-                }
-                else{
-                    message1 = 'You frucked up man!very sad!' ; 
+                
+                    message1 = 'You frucked up man! very sad!' ; 
                     message2 = 'Anyway....Try again!'
-                }
                 context.font = '75px ' + this.fontFamily ;
-                context.fillText(message1 , this.game.width*0.5 , this.game.height*0.5 - 25) ;//-40 is to move the message1 40point up vertically 
+                context.fillText(message1 , this.game.width*0.5 , this.game.height*0.5 - 25) ;//-25 is to move the message1 25point up vertically 
                 context.font = '50px '+ this.fontFamily ; 
-                context.fillText(message2, this.game.width*0.5 , this.game.height*0.5 + 40) ; //+40 is to move the message2 40points down vertically  
+                context.fillText(message2, this.game.width*0.5 , this.game.height*0.5 + 40) ; //+40 is to move the message2 40points down vertically 
             }
             // Ammo recharging animation bar
             // One stick for one ammo
@@ -448,7 +456,7 @@ class Layer {
             this.winningScore = 100 ;
             this.gameTime = 0;  //counting game time 
             this.timeLimit = 30000 ; //game time to set time limit for the game 
-            this.speed = 3;      //this is the game speed
+            this.speed = 6;      //this is the game speed
             this.debug = false;
             this.life = 9 ;
 
@@ -543,6 +551,15 @@ class Layer {
                 (rect1.y + rect2.height > rect1.y)  //enemy2 is above of enemy1
             )
         }
+        restartGame() {
+            this.gameOver = false; // Reset gameOver to false
+            // Reset all other game parameters to their initial values
+            // Example:
+            this.score = 0;
+            this.life = 9;
+            this.gameTime = 0;
+            // Reset any other parameters as needed
+        }
         
 
     }
@@ -564,7 +581,15 @@ class Layer {
         //after every updating and drawing  , we want to trigger the next animation frame .
         //we'll use a method called requestAnimationFrame which is a built-in method of window object
         //this function has two features.01.it will refresh the user's screen at specified rate (for most of us , it is 60FPS) ...02.create a timestamp function
-        requestAnimationFrame(animate) ;   //endless loop of update and draw and sending request to the browser to perform animation before the next repaint
+        
+        //endless loop of update and draw and sending request to the browser to perform animation before the next repaint
+        if (game.gameOver) {
+            playAgainButton.style.display = 'block'; // Show play again button if game is over
+        } else {
+            playAgainButton.style.display = 'none'; // Hide play again button if game is not over
+            requestAnimationFrame(animate); // Continue the animation loop
+        }
+        // Check if game is over and show play again button
     }
 
     animate(0) ; 
