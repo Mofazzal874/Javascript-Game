@@ -30,7 +30,10 @@ window.addEventListener('load', function() {
                 else if (e.key === ' '){
                     this.game.player.shootTop() ; 
                 }
-                console.log(this.game.keys) ; 
+                else if(e.key ==='d'){
+                    this.game.debug = !this.game.debug ; 
+                }
+                 
 
             }) ; 
             //now we check if the pressed button is released or not .If released , then we have remove the occurence of that button from that array
@@ -78,14 +81,19 @@ window.addEventListener('load', function() {
     class Player{      //player will need to create a game . that is why we're taking the game object as an argument in the constructor and setting it to a property called game.
         constructor(game){
             this.game = game ; 
-            this.width = 120 ;  //according to sprite animation 
-            this.height = 190 ;  //according to sprite animation
+            this.width = 120 ;  //according to sprite animation player
+            this.height = 190 ;  //according to sprite animation player
             this.x = 20 ;       //setting the initial x co-ordinate of the player in the canvas
             this.y = 100 ;      //y coordinate 
+            this.frameX = 0 ; //frameX will cycle through the spritesheet horizontally(this means column wise)
+            this.frameY = 0;//frameY will determine the row of the spritesheet (in this case there are 2 rows in the spritesheet , 1st row is for general seahorse and 2nd row is for powered up seahorse)
+            this.maxFrame = 37 ; //(player spritesheet has 37 seahorse)
             this.speedY =0;   
             this.maxSpeed = 2 ; //player can set up speed , but it can never be greater than 2 ;
             this.projectiles = [] ; // Initialize the Projectiles array with correct case
                                   //this will hold all current projectile objects 
+
+            this.image = document.getElementById('player') ; 
 
         }
         update(){
@@ -98,10 +106,32 @@ window.addEventListener('load', function() {
                 projectile.update() ; 
             }) ;
             this.projectiles = this.projectiles.filter(projectile =>!projectile.markedForDeletion) ;//here we're deleting the laser that are out of range /offscreen
+
+
+            //sprite animation
+            if(this.frameX < this.maxFrame) {
+                this.frameX++ ; 
+            }
+            else {
+                this.frameX = 0 ; 
+            }
         }
         draw(context){  //specify in which context or layer we want to draw the player if the game is multi-layered.
-            context.fillStyle = 'black' ;
-            context.fillRect(this.x , this.y , this.width , this.height) ; //making a rectangular shape for the player in the x, y  co-ordinates and with the size of player width and height.
+            
+            //show the rectangle only if debug mode is on
+            if(game.debug)context.strokeRect(this.x , this.y , this.width , this.height) ; //making a rectangular shape for the player in the x, y  co-ordinates and with the size of player width and height.
+            context.drawImage(this.image ,this.frameX*this.width , this.frameY*this.height , this.width  ,this.height ,  this.x , this.y, this.width , this.height) ;
+            //drawImage function takes maximum 9 arguments and minimum 3 arguments
+            //this.image = the image that you want to set
+            //sx = source image er x coordinate in the picture
+            //sy = source image er y 
+            //sw = source image er width zototuku nite chai 
+            //sh = source image er height zototuku nite chai
+            //this.x = destination er x co-ordinate (in this case canvas er x coordinate)
+            //this.y = destination er y co-ordinate (in this case canvas er x coordinate)
+            //this.width = destination e zototuku width e boshate chai image ta 
+            //this.height = destination e zototuku height e boshate chai image ta 
+
             this.projectiles.forEach(projectile => {
                 projectile.draw(context) ; 
             }) ;
@@ -167,10 +197,47 @@ class Angler1 extends Enemy {
     //individual layers for background, foreground, and seamlessly scrolling multi-layered parallax backgrounds.
     class Layer {
 
+        constructor(game , image , speedModifier){
+            this.game = game ; 
+            this.image = image ; 
+            this.speedModifier = speedModifier ; 
+            this.width = 1768 ; //same as the main photo 
+            this.heigth = 500 ; //same as the main photo 
+            this.x = 0 ;  //drawing will be started from x ,y = 0 , 0 
+            this.y = 0 ; 
+        }
+        update(){
+            if(this.x <= -this.width) this.x = 0 ;  //this means the background screen has moved to next screen , so we need to set the picture again to 0 
+            this.x -=this.game.speed*this.speedModifier; //decrease the x coordinate according to the set game speed 
+        }
+        draw(context){
+            context.drawImage(this.image ,this.x , this.y); 
+            context.drawImage(this.image ,this.x + this.width , this.y); 
+        }
+
     }
     //background object will pull all the layers to animate the entire gameWorld.
     class Background{
+        constructor(game){
+            this.game = game ; 
+            this.image1 = document.getElementById('layer1') ; 
+            this.image2 = document.getElementById('layer2') ; 
+            this.image3 = document.getElementById('layer3') ; 
+            this.image4 = document.getElementById('layer4') ; 
+            this.layer1 = new Layer(this.game , this.image1 , .2) ;
+            this.layer2 = new Layer(this.game , this.image2 , 0.4) ;
+            this.layer3 = new Layer(this.game , this.image3 , 1) ;
+            this.layer4 = new Layer(this.game , this.image4 , 1.5) ;
+            this.layers = [this.layer1 , this.layer2 , this.layer3] ;  //we'll hold all layers in an array  
+        }
+        update(){
+            this.layers.forEach(layer => layer.update()) ; 
 
+        }
+        draw(context){
+            this.layers.forEach(layer => layer.draw(context)) ; 
+
+        }
     }
     //timer , score and other UI elements to display to the user
     class UI {
@@ -230,6 +297,7 @@ class Angler1 extends Enemy {
         constructor(width , height){   //height and width of the canvas as arguments to ensure that the game windows size must match the canvas element
             this.width = width ; 
             this.height = height ; 
+            this.background = new Background(this) ; 
             this.player = new Player(this) ;  //we want to create a new player as soon as we start the game , that's why player class is instantiated in Game class....this refers to this Game class
             this.input = new InputHandler(this) ; 
             this.ui = new UI(this) ; 
@@ -250,13 +318,19 @@ class Angler1 extends Enemy {
             this.score = 0 ;
             this.winningScore = 10 ;
             this.gameTime = 0;  //counting game time 
-            this.timeLimit = 10000 ; //game time to set time limit for the game   
+            this.timeLimit = 10000 ; //game time to set time limit for the game 
+            this.speed = 1;      //this is the game speed
+
+            this.debug = true; 
+
              
 
         }
         update(deltaTime){
             if(!this.gameOver) this.gameTime+=deltaTime ; 
             if(this.gameTime > this.timeLimit) this.gameOver = true; 
+            this.background.update() ; 
+            this.background.layer4.update() ; 
             this.player.update() ; //ei Game er er jonne make kora player tar update method the call holo ;
 
             //all about ammo refiling and ammoTimer
@@ -302,12 +376,15 @@ class Angler1 extends Enemy {
 
         }
         draw(context){          //specify in which context or layer we want to draw the player if the game is multi-layered.mane ei game er context tai send kore dibe player er kache  draw korar jonne 
+            this.background.draw(context) ; //background must be drawn before this.player.draw(context). Otherwise player will be drawn first and on top of it , background will be drawn ,creating problem
             this.player.draw(context) ; //same as before 
             this.ui.draw(context) ; 
             this.enemies.forEach(enemy =>{
                 enemy.draw(context) ; 
             });
+            this.background.layer4.draw(context) ; 
         }
+        
         addEnemy(){
             this.enemies.push(new Angler1(this)) ; 
         }
