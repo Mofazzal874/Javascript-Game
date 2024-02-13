@@ -42,7 +42,7 @@ window.addEventListener('load', function() {
                 if(this.game.keys.indexOf(e.key)>-1){
                     this.game.keys.splice(this.game.keys.indexOf(e.key) , 1) ;//we are deleting the key using index and we're deleting starting from that index only one time
                 }
-                console.log(this.game.keys) ; 
+                
             }) ;
         }
 
@@ -56,7 +56,8 @@ window.addEventListener('load', function() {
             this.width = 10  ; 
             this.height = 3 ; 
             this.speed = 3 ; 
-            this.markedForDeletion = false ; 
+            this.markedForDeletion = false ;
+            this.image = document.getElementById('projectile') ;  
 
         }
         update(){
@@ -65,8 +66,7 @@ window.addEventListener('load', function() {
 
         }
         draw(context){
-            context.fillStyle = 'yellow' ; 
-            context.fillRect(this.x , this.y , this.width , this.height) ; 
+           context.drawImage(this.image , this.x , this.y) ;  
 
         }
          
@@ -105,6 +105,10 @@ window.addEventListener('load', function() {
             else this.speedY = 0 ; 
             this.y +=this.speedY ; 
             //handle projectiles
+
+            //vertical boundaries for player so that player can not leave the screen vertically.Though the player can disappear halfway to avoid enemy
+            if(this.y + this.height*0.5 > this.game.height ) this.y = this.game.height - this.height*0.5 ;  // this is for going downwards
+            else if(this.y < -this.height*0.5) this.y = -this.height*0.5 ; //this is for going upwards
             this.projectiles.forEach(projectile => {
                 projectile.update() ; 
             }) ;
@@ -163,7 +167,7 @@ window.addEventListener('load', function() {
 
             }
             if(this.powerUp) this.shootBottom() ; 
-            console.log(this.projectiles) ;
+            
             
         }
         shootBottom(){
@@ -176,7 +180,7 @@ window.addEventListener('load', function() {
         enterPowerUp(){
             this.powerUpTimer = 0 ; 
             this.powerUp = true 
-            this.game.ammo = this.game.maxAmmo ; 
+            if(this.game.ammo < this.game.maxAmmo) this.game.ammo = this.game.maxAmmo ; 
         }
          
         
@@ -208,8 +212,12 @@ window.addEventListener('load', function() {
         draw(context){
            if(this.game.debug) context.strokeRect(this.x , this.y , this.width , this.height) ;
             context.drawImage(this.image ,this.frameX * this.width , this.frameY * this.height ,this.width , this.height ,   this.x , this.y , this.width , this.height) ; 
-            context.font = '20 px Helvetica' ; 
-            context.fillText(this.lives , this.x , this.y) ;  
+            if(this.game.debug){
+                context.font = '20 px Helvetica' ; 
+                context.fillText(this.lives , this.x , this.y) ; 
+
+            }
+             
         }
 
     }
@@ -223,10 +231,10 @@ class Angler1 extends Enemy {
         //additional properties
         this.width = 228 ;  //width of this enemy
         this.height = 169 ; //height of this enemy 
-        this.y = Math.random()*(this.game.height*0.9 - this.height) ;
+        this.y = Math.random()*(this.game.height*0.95 - this.height) ;
         this.image = document.getElementById('angler1') ; 
         this.frameY = Math.floor(Math.random()*3); 
-        this.lives = 2 ; //every enemy have 5 lives 
+        this.lives = 5 ; //every enemy have 5 lives 
             this.score = this.lives ; //if you kill this enemy you get 'lives' point
 
     }
@@ -239,10 +247,10 @@ class Angler2 extends Enemy {
         //additional properties
         this.width = 213 ;  //width of this enemy
         this.height = 165 ; //height of this enemy 
-        this.y = Math.random()*(this.game.height*0.9 - this.height) ;
+        this.y = Math.random()*(this.game.height*0.95 - this.height) ;
         this.image = document.getElementById('angler2') ; 
         this.frameY = Math.floor(Math.random()*2);
-        this.lives = 3 ; //every enemy have 5 lives 
+        this.lives = 6 ; //every enemy have 5 lives 
             this.score = this.lives ; //if you kill this enemy you get 'lives' point 
 
     }
@@ -256,12 +264,52 @@ class luckyFish extends Enemy {
         //additional properties
         this.width = 99 ;  //width of this enemy
         this.height = 95 ; //height of this enemy 
-        this.y = Math.random()*(this.game.height*0.9 - this.height) ;
+        this.y = Math.random()*(this.game.height*0.95 - this.height) ;
         this.image = document.getElementById('lucky') ; 
         this.frameY = Math.floor(Math.random()*2);
         this.lives = 3 ; //every enemy have 5 lives 
         this.score = 15 ; //if you kill this enemy you get 'lives' point 
-        this.type = 'lucky'
+        this.type = 'lucky';
+        this.speedX = Math.random()*-1.2 -0.2 ; 
+
+    }
+
+}
+class HiveWhale extends Enemy {
+    constructor(game){
+        //all the properties of Enemy
+        super(game) ; //to execute all the features of Enemy constructor class.Otherwise Angler1 constructor will override the Enemy class constructor and Enemy properties will not be executed here 
+        //additional properties
+        this.width = 400 ;  //width of this enemy
+        this.height = 227 ; //height of this enemy 
+        this.y = Math.random()*(this.game.height*0.9 - this.height) ;
+        this.image = document.getElementById('hivewhale') ; 
+        this.frameY = 0 ;
+        this.lives = 20 ; //every enemy have 5 lives 
+        this.score = this.lives; //if you kill this enemy you get 'lives' point 
+        this.type = 'hive' ;
+        this.speedX = Math.random()*-1.2 -0.2 ;  
+
+    }
+
+}
+
+class Drone extends Enemy {
+    constructor(game , x , y ){   //x and y are the current position of the Hivewhale 
+        //all the properties of Enemy
+        super(game) ; //to execute all the features of Enemy constructor class.Otherwise Angler1 constructor will override the Enemy class constructor and Enemy properties will not be executed here 
+        //additional properties
+        this.width = 115 ;  //width of this enemy
+        this.height = 95 ; //height of this enemy 
+
+        this.x = x ; 
+        this.y = y ; 
+        this.image = document.getElementById('drone') ; 
+        this.frameY = Math.floor(Math.random()*2) ; 
+        this.lives = 3 ; //every enemy have 5 lives 
+        this.score = this.lives; //if you kill this enemy you get 'lives' point 
+        this.type = 'drone' ; 
+        this.speedX = Math.random()*-4.2 -0.5; 
 
     }
 
@@ -296,10 +344,10 @@ class Layer {
             this.image2 = document.getElementById('layer2') ; 
             this.image3 = document.getElementById('layer3') ; 
             this.image4 = document.getElementById('layer4') ; 
-            this.layer1 = new Layer(this.game , this.image1 , .2) ;
-            this.layer2 = new Layer(this.game , this.image2 , 0.4) ;
-            this.layer3 = new Layer(this.game , this.image3 , 1) ;
-            this.layer4 = new Layer(this.game , this.image4 , 1.5) ;
+            this.layer1 = new Layer(this.game , this.image1 , .3) ;
+            this.layer2 = new Layer(this.game , this.image2 , 0.5) ;
+            this.layer3 = new Layer(this.game , this.image3 , 1.1) ;
+            this.layer4 = new Layer(this.game , this.image4 , 1.6) ;
             this.layers = [this.layer1 , this.layer2 , this.layer3] ;  //we'll hold all layers in an array  
         }
         update(){
@@ -316,7 +364,7 @@ class Layer {
         constructor(game) {
             this.game = game;
             this.fontSize = 25;
-            this.fontFamily = 'Helvetica'; // Corrected typo here
+            this.fontFamily = 'Bangers'; // Corrected typo here
             this.color = 'white';
         }
         draw(context) {
@@ -334,6 +382,7 @@ class Layer {
             const formattedTime = (this.game.gameTime*0.001).toFixed(1) ; //this will format the time from milliseconds to seconds
                                                                           //and fixed the number after decimal point to 1 digit only
             context.fillText('Timer: ' + formattedTime , 20 , 100)  ;
+            context.fillText("Lives Remaining: " + this.game.life ,800 , 40 ) ; 
             //game over message
             if(this.game.gameOver){
                 context.textAlign = 'center' ; 
@@ -344,12 +393,12 @@ class Layer {
                     message2 = "Ayhay! Jita gecho dehi!" ; 
                 }
                 else{
-                    message1 = 'You Lost!very sad!' ; 
+                    message1 = 'You frucked up man!very sad!' ; 
                     message2 = 'Anyway....Try again!'
                 }
-                context.font = '50px ' + this.fontFamily ;
-                context.fillText(message1 , this.game.width*0.5 , this.game.height*0.5 - 40) ;//-40 is to move the message1 40point up vertically 
-                context.font = '25px '+ this.fontFamily ; 
+                context.font = '75px ' + this.fontFamily ;
+                context.fillText(message1 , this.game.width*0.5 , this.game.height*0.5 - 25) ;//-40 is to move the message1 40point up vertically 
+                context.font = '50px '+ this.fontFamily ; 
                 context.fillText(message2, this.game.width*0.5 , this.game.height*0.5 + 40) ; //+40 is to move the message2 40points down vertically  
             }
             // Ammo recharging animation bar
@@ -357,6 +406,12 @@ class Layer {
             if(this.game.player.powerUp) context.fillStyle ='#ffffbd' ; 
             for (let i = 0; i < this.game.ammo; i++) {
                 context.fillRect(20 + 5 * i, 50, 3, 20);
+            }
+
+            //Lives Remaining Bar 
+            context.fillStyle = 'RED' ; 
+            for(let i = this.game.life ; i> 0 ; i--){
+                context.fillRect(800+10*i , 50 , 10 , 25) ; 
             }
             context.restore() ; 
         }
@@ -382,27 +437,27 @@ class Layer {
             this.enemies = []  ;//will hold all currently active enemy objects
 
             this.enemyTimer = 0 ; //this will count between 0 and enemyInterval
-            this.enemyInterval = 1000 ; //add new Angler1 enemy to the game every 1 second
+            this.enemyInterval = 2000 ; //add new Angler1 enemy to the game every 1 second
 
             this.ammo = 20 ; //starting ammo 
             this.maxAmmo = 50 ;  //maximum ammo 
             this.ammoTimer = 0 ; 
-            this.ammoInterval = 400 ; //half second..Replenish ammo after every .5 seconds
+            this.ammoInterval = 350 ; //half second..Replenish ammo after every .5 seconds
             this.gameOver = false ;
             this.score = 0 ;
-            this.winningScore = 10 ;
+            this.winningScore = 100 ;
             this.gameTime = 0;  //counting game time 
-            this.timeLimit = 15000 ; //game time to set time limit for the game 
-            this.speed = 1;      //this is the game speed
-
-            this.debug = true; 
+            this.timeLimit = 30000 ; //game time to set time limit for the game 
+            this.speed = 3;      //this is the game speed
+            this.debug = false;
+            this.life = 9 ;
 
              
 
         }
         update(deltaTime){
             if(!this.gameOver) this.gameTime+=deltaTime ; 
-            if(this.gameTime > this.timeLimit) this.gameOver = true; 
+            if(this.life<=0) this.gameOver = true; 
             this.background.update() ; 
             this.background.layer4.update() ; 
             this.player.update(deltaTime) ; //ei Game er er jonne make kora player tar update method the call holo ;
@@ -423,8 +478,8 @@ class Layer {
                 if(this.checkCollison(this.player, enemy)) {  //dekhtechi player er sathe collision hoiteche kina
                                                                 //true ashle collision hoiteche and we have to vanish the enemies 
                     enemy.markedForDeletion = true ;        //marking to delete
-                    if(enemy.type ='lucky') this.player.enterPowerUp() ; 
-                    else this.score-- ;  
+                    if(enemy.type ==='lucky') this.player.enterPowerUp() ; 
+                    else if(!this.gameOver) {this.score-- ;this.life--;}  
                 }
                 //collision between projectile and enemy ....enemy life decrease by one
                 this.player.projectiles.forEach(projectile =>{
@@ -433,8 +488,15 @@ class Layer {
                         projectile.markedForDeletion = true;
                         if(enemy.lives<=0){
                             enemy.markedForDeletion = true ; 
+                            if(enemy.type === 'hive'){
+                                for(let i = 0 ;i < 5 ;i++){
+                                    this.enemies.push(new Drone(this, enemy.x + Math.random()*enemy.width, enemy.y + Math.random()*enemy.height*0.5)) ;
+
+                                }
+                                 
+                            }
                             if(!this.gameOver) this.score+=enemy.score ; 
-                            if(this.score>this.winningScore)this.gameOver = true; 
+                            //if(this.score>this.winningScore)this.gameOver = true; 
 
                         }
                     }
@@ -466,6 +528,7 @@ class Layer {
             //create 50% time angler1 and other 50% time angler2 
             if(randomize<0.3) this.enemies.push(new Angler1(this)) ;
             else if(randomize<0.6) this.enemies.push(new Angler2(this)) ;
+            else if(randomize<0.7) this.enemies.push(new HiveWhale(this)) ;
             else this.enemies.push(new luckyFish(this)) ;
              
         }
