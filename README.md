@@ -3,7 +3,7 @@ You're a **Hunter**..
 you Hunt a **"Mystical Creature"** called **"Samba"** ...This creature is some type of Humanoid and robotic entity..
 You have to hunt it down...or you're frucked up man...
 - ## **(must be played with pc for control)**
-- **Play Here :**<a href="mofazzal874.github.io/SambaHunter/">Play</a>
+- **Play Here :**<a href="[mofazzal874.github.io/SambaHunter/](https://mofazzal874.github.io/SambaHunter/)">Play</a>
 ## Gameplay
 
 - **Control:** Use the **up and down arrow** keys to move your character up and down.
