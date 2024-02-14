@@ -15,3 +15,4 @@ You have to hunt it down...or you're frucked up man...
 ## Objective
 
 Your objective is clear: Hunt down the Samba  and eliminate thme before they pose a threat to humanity or মানবতা . Use your agility, shooting skills, and power-ups wisely to overcome the challenges that lie ahead.
+Game tutorial:<a href = "https://www.youtube.com/watch?v=7BHs1BzA4fs">Link</a>
